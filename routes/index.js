@@ -449,105 +449,124 @@ var send = function(anumber, msg) {
 
 }
 
+var prepTrip = function(convoy) {
+    var riderCount = convoy.members.length;
+    convoy.cars = [];
+    // var xlCode = "821415d8-3bd5-4e27-9604-194e4359a449";
+    // var xCode = "a1111c8c-c720-46c3-8534-2fcdd730040d";
+
+    addCarTypes(convoy);
+    console.log("FINISHED ADDING CAR TYPES");
+    addRidersToCars(convoy);
+    console.log("FINISHED ADDING RIDERS TO CARS");
+    addCaptainToRiders(convoy);
+    console.log("FINISHED ADDING CAPTAINS TO RIDERS");
+
+
+    return convoy;
+}
+
+var addRidersToCars = function(convoy){
+  var memberCounter = 0;
+  for(var carIndex = 0 ; carIndex < convoy.cars.length; carIndex++){
+
+    var currentCar = convoy.cars[carIndex];
+
+    if(currentCar.type === 'a1111c8c-c720-46c3-8534-2fcdd730040d'){
+    // If it's an X
+    // carCapacity-1 because the captain is not included in convoy.members
+      for(var i = 0; i < carCapacity("X") - 1; i++){
+        if(convoy.members[memberCounter] != undefined){
+          currentCar.riders.push(convoy.members[memberCounter]);
+        }
+        memberCounter++;
+      }
+
+    }else if(currentCar.type === '821415d8-3bd5-4e27-9604-194e4359a449'){
+      // If it's an XL
+      // carCapacity-1 because the captain is not included in convoy.members
+      for(var j = 0; j < carCapacity("XL") - 1 ; j++){
+        if(convoy.members[memberCounter] != undefined){
+          currentCar.riders.push(convoy.members[memberCounter]);
+        }
+        memberCounter++;
+      }
+
+    }
+  }
+
+}
+
+var addCarTypes = function(convoy){
+
+  var combination = cheapestCombination(convoy.members.length);
+  var carAmount = combination.carList.length;
+  var captainList = selectCaptains(convoy, carAmount);
+
+  for (var i = 0; i < carAmount; i++) {
+    var currentCar = new car(captainList[i]);
+    currentCar.type = combination.carList[i];
+    convoy.cars.push(currentCar);
+  }
+
+}
+
+var addCaptainToRiders = function(convoy){
+
+  for(var i = 0; i < convoy.cars.length; i++){
+    var captain = convoy.cars[i].captain;
+    convoy.cars[i].riders.push(captain);
+  }
+
+}
+
+
+
 var cheapestCombination = function(numRiders) {
 
     var uberReservations = {
         xlReserves: 0,
-        xReserves: 0
+        xReserves: 0,
+        carList: []
     };
-
-    if (numRiders > carCapacity("X")) {
-        while (numRiders > carCapacity("X")) {
-            numRiders -= carCapacity("XL");
-            uberReservations.xlReserves += 1;
-        }
-    } else {
-        while (numRiders >= 0) {
-            numRiders -= carCapacity("X");
+    if(numRiders > 2){
+      while (numRiders > 0) {
+          numRiders -= carCapacity("XL");
+          uberReservations.xlReserves += 1;
+      }
+      if(numRiders < -1){
+        while (numRiders < 1) {
+            numRiders += carCapacity("X");
             uberReservations.xReserves += 1;
-        }
-    }
-
-    if (numRiders > carCapacity("X")) {
-        numRiders -= carCapacity("XL");
-        uberReservations.xlReserves += 1;
-    } else if (numRiders >= 1) {
+            uberReservations.xlReserves -= 1;
+          }
+      }
+    } else{
+      while (numRiders >= 0) {
         numRiders -= carCapacity("X");
         uberReservations.xReserves += 1;
+      }
+    }
+
+    // UberXL
+    for (var i = 0; i < uberReservations.xlReserves; i++) {
+      uberReservations.carList.push("821415d8-3bd5-4e27-9604-194e4359a449");
+    }
+
+    // UberX
+    for (var i = 0; i < uberReservations.xReserves; i++) {
+      uberReservations.carList.push("a1111c8c-c720-46c3-8534-2fcdd730040d");
     }
 
     return uberReservations;
 }
 
-var carCapacity = function(car) {
-    if (car === "XL") {
+var carCapacity = function(type) {
+    if (type === "XL") {
         return 6;
-    } else if (car === "X") {
+    } else if (type === "X") {
         return 4;
     }
-    return -1;
-
-}
-
-var prepTrip = function(convoy) {
-    var riderCount = convoy.members.length;
-
-    var combination = cheapestCombination(riderCount);
-    var numCars = combination.xlReserves + combination.xReserves;
-    var numXL = combination.xlReserves;
-    var numX = combination.xReserves;
-    var riderIndex = 0;
-    var carIndex = 0;
-    var xlCode = "821415d8-3bd5-4e27-9604-194e4359a449";
-    var xCode = "a1111c8c-c720-46c3-8534-2fcdd730040d";
-    var captainList = selectCaptains(convoy, numCars);
-
-
-    var captainIterator = 0;
-
-    for (var i = 0; i < combination.xlReserves; i++) {
-        var curcar = new car(captainList[captainIterator]);
-        captainIterator++;
-        curcar.type = xlCode;
-        convoy.cars.push(curcar);
-    }
-
-    for (var i = 0; i < combination.xReserves; i++) {
-        var curcar = new car(captainList[captainIterator]);
-        captainIterator++;
-        curcar.type = xCode;
-        convoy.cars.push(curcar);
-
-    }
-
-    for (riderIndex = 0; riderIndex < riderCount && (numCars != 0); riderIndex++) {
-        curcar = convoy.cars[carIndex];
-
-        if (curcar.type === xlCode) {
-            for (var j = 0; j < carCapacity("XL"); j++) {
-                if (convoy.members[riderIndex] != undefined) {
-                    curcar.riders.push(convoy.members[riderIndex]);
-                }
-                riderIndex++;
-            }
-            carIndex++;
-        } else if (curcar.type === xCode) {
-            for (var j = 0; j < carCapacity("X"); j++) {
-                if (convoy.members[riderIndex] != undefined) {
-                    curcar.riders.push(convoy.members[riderIndex]);
-                }
-                riderIndex++;
-            }
-            carIndex++;
-        } else {
-            console.log("SKIPPING IF STATEMENT");
-        }
-    }
-
-    console.log(curcar);
-
-    convoy.unconfirmed = captainList.length;
-    startAuth(convoy);
 }
 
 var selectCaptains = function(convoy, numCars) {
@@ -557,12 +576,12 @@ var selectCaptains = function(convoy, numCars) {
 
     for (var i = 0; i < numCars; i++) {
         randomValue = Math.floor(Math.random() * currentMembers.length);
-        console.log("RANDOM");
-        console.log(randomValue);
-
-        captains.push(currentMembers[randomValue]);
+        var newCaptain = currentMembers[randomValue]
+        captains.push(newCaptain);
+        currentMembers.splice(randomValue, 1);
     }
 
+    convoy.unconfirmed = captains.length;
     return captains;
 }
 
