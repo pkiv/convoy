@@ -150,10 +150,10 @@ function number(digits) {
     this.convoyId = null;
     this.digits = digits;
     this.uber = new Uber({
-        client_id: 'otcRybADJ6LvGTutss5Mm911lWxd1FFo',
-        client_secret: 'J6ywf_hsnnGB8X_spvhqA86d83jVpTXpKnqqADAT',
-        server_token: 'BO8O8N-vEFR2pduLVihzOjxBko3b7ZHIUyoSh_7j',
-        redirect_uri: "https://b4c5b20e.ngrok.io/api/callback" +
+        client_id: process.env.UBER_CLIENT_ID,
+        client_secret: process.env.UBER_CLIENT_SECRET,
+        server_token: process.env.UBER_SERVER_TOKEN,
+        redirect_uri: process.env.UBER_REDIRECT_URI+
             '?phone=' + encodeURIComponent(digits),
         name: 'Convoy',
         language: 'en_US', // optional, defaults to en_US
@@ -433,8 +433,8 @@ var reply = function(res, msg) {
 }
 
 var send = function(anumber, msg) {
-    var accountSid = 'AC997a7365d51e302b0ac56c961df9a625';
-    var authToken = '9fcf4b49fab472543ed5950509246ed3';
+    var accountSid = process.env.TWILIO_ACCOUNT_SID;
+    var authToken = process.env.TWILIO_AUTH_TOKEN;
     var twilio = require('twilio');
     var client = new twilio.RestClient(accountSid, authToken);
     console.log("send: " + msg);
